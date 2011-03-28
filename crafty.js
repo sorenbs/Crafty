@@ -187,31 +187,7 @@ Crafty.fn = Crafty.prototype = {
 		return this;
 	},
 
-
-    //Object.defineProperty(this, 'col', { set: function(v) { this.x = this._cellSize * v; }, get: function() { return Math.round(this.x / this._cellSize); } });
-
-    props: function(map) {
-        for(var p in map)
-        {
-            if(Crafty.support.setter)
-            {
-                this.__defineSetter__(p, map[p].set);
-                this.__defineGetter__(p, map[p].get);
-
-            //IE9 supports Object.defineProperty
-            } else if(Crafty.support.defineProperty) {
-
-                Object.defineProperty(this, p, { set: map[p].set, get: map[p].get });
-
-            } else {
-
-                // implement 'check on every frame for a difference' fallback
-
-            }
-        }
-    },
-	
-	toArray: function() {
+    toArray: function() {
 		return slice.call(this, 0);
 	},
 	
@@ -2372,7 +2348,6 @@ Crafty.c("controls", {
 			//prevent searchable keys
 			if(!(e.key >= 8 && e.key <= 9 || e.key >= 112 && e.key <= 123)) {
                 if(e.preventDefault) //FIX: IE hack
-                    e.preventDefault();
 				return false;
 			}
 		}
