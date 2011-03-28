@@ -6,7 +6,7 @@
  * Dual licensed under the MIT or GPL licenses.
  */
 
-(function(window, undefined) {
+(function(window, undefined) {
 
 var Crafty = function(selector) {
 		return new Crafty.fn.init(selector);
@@ -186,6 +186,30 @@ Crafty.fn = Crafty.prototype = {
 		this.trigger("change"); //trigger change event
 		return this;
 	},
+
+
+    //Object.defineProperty(this, 'col', { set: function(v) { this.x = this._cellSize * v; }, get: function() { return Math.round(this.x / this._cellSize); } });
+
+    props: function(map) {
+        for(var p in map)
+        {
+            if(Crafty.support.setter)
+            {
+                this.__defineSetter__(p, map[p].set);
+                this.__defineGetter__(p, map[p].get);
+
+            //IE9 supports Object.defineProperty
+            } else if(Crafty.support.defineProperty) {
+
+                Object.defineProperty(this, p, { set: map[p].set, get: map[p].get });
+
+            } else {
+
+                // implement 'check on every frame for a difference' fallback
+
+            }
+        }
+    },
 	
 	toArray: function() {
 		return slice.call(this, 0);
@@ -495,11 +519,13 @@ function UID() {
 window.Crafty = Crafty;
 })(window);
 
-//wrap around components
+
+//wrap around components
 (function(Crafty, window, document) {
 
 
-/**
+
+/**
 * Spatial HashMap for broad phase collision
 *
 * @author Louis Stowasser
@@ -640,7 +666,8 @@ Entry.prototype = {
 parent.HashMap = HashMap;
 })(Crafty);
 
-Crafty.map = new Crafty.HashMap();
+
+Crafty.map = new Crafty.HashMap();
 var M = Math,
 	Mc = M.cos,
 	Ms = M.sin,
@@ -1228,7 +1255,8 @@ Crafty.polygon.prototype = {
 	}
 };
 
-Crafty.c("collision", {
+
+Crafty.c("collision", {
 	
 	collision: function(poly) {
 		var area = this._mbr || this;
@@ -1411,7 +1439,8 @@ Crafty.polygon.prototype = {
 	}
 });
 
-Crafty.c("DOM", {
+
+Crafty.c("DOM", {
 	_element: null,
 	_filters: {},
 	
@@ -1609,7 +1638,8 @@ Crafty.extend({
 	}
 });
 
-Crafty.extend({
+
+Crafty.extend({
 	
 	randRange: function(from, to) {
 		return Math.round(Math.random() * (to - from) + from);
@@ -2063,7 +2093,8 @@ Crafty.c("viewport", {
 });
 
 
-/**
+
+/**
 * Canvas Components and Extensions
 */
 Crafty.c("canvas", {
@@ -2177,7 +2208,8 @@ Crafty.extend({
 	}
 });
 
-Crafty.extend({
+
+Crafty.extend({
 	down: null, //object mousedown, waiting for up
 	over: null, //object mouseover, waiting for out
 	mouseObjs: 0,
@@ -2339,7 +2371,8 @@ Crafty.c("controls", {
 				
 			//prevent searchable keys
 			if(!(e.key >= 8 && e.key <= 9 || e.key >= 112 && e.key <= 123)) {
-				e.preventDefault();
+                if(e.preventDefault) //FIX: IE hack
+                    e.preventDefault();
 				return false;
 			}
 		}
@@ -2428,7 +2461,8 @@ Crafty.c("twoway", {
 });
 
 
-/**
+
+/**
 * Animation component
 *
 * Crafty(player).animate("walk_left", 0, 1, 4, 100);
@@ -2561,7 +2595,8 @@ Crafty.c("tween", {
 	}
 });
 
-Crafty.c("color", {
+
+Crafty.c("color", {
 	_color: "",
 	ready: true,
 	
@@ -2973,7 +3008,8 @@ Crafty.DrawManager = (function() {
 	};
 })();
 
-Crafty.c("group", {
+
+Crafty.c("group", {
 	_children: [],
 	
 	group: function(children) {
@@ -3036,7 +3072,8 @@ Crafty.extend({
 	}
 });
 
-Crafty.extend({
+
+Crafty.extend({
 	isometric: {
 		_tile: 0,
 		_z: 0,
@@ -3064,7 +3101,8 @@ Crafty.extend({
 	}
 });
 
-//Particle component
+
+//Particle component
 //Based on Parcycle by Mr. Speaker, licensed under the MIT,
 //Ported by Leo Koppelkamm
 //**This is canvas only & won't do anything if the browser doesn't support it!**
@@ -3360,7 +3398,8 @@ Crafty.c("particles", {
 	}
 });
 
-Crafty.extend({
+
+Crafty.extend({
 	audio: {
 		_elems: {},
 		MAX_CHANNELS: 5,
@@ -3500,7 +3539,8 @@ Crafty.c("particles", {
 	}
 });
 
-Crafty.c("text", {
+
+Crafty.c("text", {
 	_text: "",
 	_font: "",
 	
@@ -3531,7 +3571,8 @@ Crafty.c("particles", {
 });
 
 
-Crafty.c("health", {
+
+Crafty.c("health", {
 	_mana: 100,
 	
 	health: function(mana) {
@@ -3556,7 +3597,8 @@ Crafty.c("particles", {
 	}
 });
 
-Crafty.c("score", {
+
+Crafty.c("score", {
 	_score: 0,
 	
 	incrementScore: function(by) {
@@ -3572,7 +3614,8 @@ Crafty.c("particles", {
 	}
 });
 
-/**
+
+/**
 * Loader to load assets
 */
 Crafty.extend({
@@ -3619,6 +3662,7 @@ Crafty.extend({
 	}
 });
 
-})(Crafty,window,window.document);
 
-
+})(Crafty,window,window.document);
+
+
