@@ -187,6 +187,27 @@ Crafty.fn = Crafty.prototype = {
 		return this;
 	},
 
+    props: function(map) {
+        for(var p in map)
+        {
+            if(Crafty.support.setter)
+            {
+                this.__defineSetter__(p, map[p].set);
+                this.__defineGetter__(p, map[p].get);
+
+            //IE9 supports Object.defineProperty
+            } else if(Crafty.support.defineProperty) {
+
+                Object.defineProperty(this, p, { set: map[p].set, get: map[p].get });
+
+            } else {
+
+                // implement 'check on every frame for a difference' fallback
+
+            }
+        }
+    },
+
 	toArray: function() {
 		return slice.call(this, 0);
 	},
