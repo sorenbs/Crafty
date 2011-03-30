@@ -190,22 +190,52 @@ Crafty.fn = Crafty.prototype = {
     props: function(map) {
         for(var p in map)
         {
-            if(Crafty.support.setter)
-            {
-                this.__defineSetter__(p, map[p].set);
+            if(Crafty.support.setter) {
+                this.__defineSetter__(p, function(prop){
+                    return function(v) {
+                        prop.set.apply(this, [v]);
+                        this.trigger("change");
+                    }}(map[p]));
                 this.__defineGetter__(p, map[p].get);
 
             //IE9 supports Object.defineProperty
             } else if(Crafty.support.defineProperty) {
 
-                Object.defineProperty(this, p, { set: map[p].set, get: map[p].get });
+                Object.defineProperty(this, p, {
+                    set: function(prop){
+                        return function(v) {
+                            prop.set.apply(this, [v]);
+                            this.trigger("change");
+                        }}(map[p]),
+                    get: map[p].get });
 
             } else {
 
-                // implement 'check on every frame for a difference' fallback
+                //Fallback for IE<9.
+                //This implementation executes the setter on each frame so side effects are bad.
+                //A state change caused by setter or getter is not calculated until next frame.
 
+                var getValue, setValue = this[p];
+
+                this.bind("enterframe", function() {
+
+                    //setter
+                    if(this[p] !== setValue) {
+                        map[p].set.apply(this, [this[p]]);
+                        setValue = this.p;
+                        this.trigger("change");
+                    }
+
+                    //getter - does not trigger setter
+                    getValue = map[p].get.apply(this, []);
+                    if(getValue !== this[p])
+                        this[p] = setValue = getValue;
+
+                });
             }
         }
+
+        return this;
     },
 
 	toArray: function() {
