@@ -68,35 +68,6 @@ $(document).ready(function() {
 		equals( first.another, 56, "properties from object assigned" );
 	});
 
-    test("props", function() {
-        first.props({p1 : {get: function() {return 5}, set: function(v) {}}});
-        Crafty.trigger("enterframe");
-        equals(first.p1, 5, "single property getter");
-
-        first.props({p2 : {get: function() {return this._p2}, set: function(v) {this._p2 = v*2}}});
-        first.p2 = 13;
-        Crafty.trigger("enterframe");
-        equals(first.p2, first._p2, "single property setter");
-
-        first.props({
-            p3 : {get: function() {return this._p3/3}, set: function(v) {this._p3 = v*3}},
-            p4 : {get: function() {return this._p4}, set: function(v) {this._p4 = v*4}}});
-        first.p3 = 9;
-        first.p4 = 3;
-        Crafty.trigger("enterframe");
-        equals(first.p3, 9, "multiple property getter/setter");
-        equals(first.p4, 12, "multiple property getter/setter");
-
-
-        first.bind("change", function() {
-            first.changeRegistered = true;
-        });
-        first.p4 = 42;
-        Crafty.trigger("enterframe");
-        equals(first.changeRegistered, true, "change event triggered")
-        first.unbind("change");
-    });
-
 	test("bind", function() {
 		first.bind("myevent", function() {
 			ok(true, "Custom event");
