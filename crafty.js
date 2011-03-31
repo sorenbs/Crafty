@@ -187,55 +187,94 @@ Crafty.fn = Crafty.prototype = {
 		return this;
 	},
 
-    props: function(map) {
-        for(var p in map)
-        {
-            if(Crafty.support.setter) {
-                this.__defineSetter__(p, function(prop){
-                    return function(v) {
-                        prop.set.apply(this, [v]);
+    setter: function(property, setter) {
+        if(Crafty.support.setter) {
+                this.__defineSetter__(property, function(v) {
+                        setter.apply(this, [v]);
                         this.trigger("change");
-                    }}(map[p]));
-                this.__defineGetter__(p, map[p].get);
+                    });
 
-            //IE9 supports Object.defineProperty
-            } else if(Crafty.support.defineProperty) {
+        //IE9 supports Object.defineProperty
+        } else if(Crafty.support.defineProperty) {
 
-                Object.defineProperty(this, p, {
-                    set: function(prop){
-                        return function(v) {
-                            prop.set.apply(this, [v]);
-                            this.trigger("change");
-                        }}(map[p]),
-                    get: map[p].get });
-
-            } else {
-
-                //Fallback for IE<9.
-                //This implementation executes the setter on each frame so side effects are bad.
-                //A state change caused by setter or getter is not calculated until next frame.
-
-                var getValue, setValue = this[p];
-
-                this.bind("enterframe", function() {
-
-                    //setter
-                    if(this[p] !== setValue) {
-                        map[p].set.apply(this, [this[p]]);
-                        setValue = this.p;
+            Object.defineProperty(this, property, {
+                set: function(v) {
+                        setter.apply(this, [v]);
                         this.trigger("change");
-                    }
+                    },
+                configurable : true});
 
-                    //getter - does not trigger setter
-                    getValue = map[p].get.apply(this, []);
-                    if(getValue !== this[p])
-                        this[p] = setValue = getValue;
+        } else {
 
-                });
-            }
+            //Initialise getter and setter support for IE<9.
+            if(!Crafty._gettersetter)
+                this._initGetterSetter();
+            Crafty._gettersetter.sets.push([this, property, setter, this[property]]);
         }
 
         return this;
+    },
+
+    getter: function(property, getter) {
+        if(Crafty.support.setter) {
+            this.__defineGetter__(property, getter);
+
+        //IE9 supports Object.defineProperty
+        } else if(Crafty.support.defineProperty) {
+
+            Object.defineProperty(this, property, {
+                get: getter,
+                configurable : true
+            });
+        } else {
+
+            //Initialise getter and setter support for IE<9.
+            if(!Crafty._gettersetter)
+                this._initGetterSetter();
+
+            this[property] = getter();
+            Crafty._gettersetter.gets.push([this, property, getter]);
+        }
+
+        return this;
+    },
+
+    _initGetterSetter: function() {
+         Crafty._gettersetter = Crafty.e().attr(
+                {
+                    gets: Array(), //contains [obj. ref, property, getter]
+                    sets: Array()  //contains [obj. ref, property, setter, old value]
+                });
+                Crafty._gettersetter.bind('enterframe', function() {
+                    //run the setter if a new value has been assigned and keep track of the new 'old value'
+                    for(var i = 0; i < this.sets.length; i++)
+                    {
+                        if(this.sets[i][0][this.sets[i][1]] !== this.sets[i][3]) {
+                            //alert(this.sets[i][0].aaa + ' diff' + this.sets[i][0][this.sets[i][1]] + ' != ' + this.sets[i][3] + ' : ' + this.sets[i][2] + ' [' + i + '/' + this.sets.length);
+                            this.sets[i][2].apply(this.sets[i][0], [ this.sets[i][0][this.sets[i][1]] ]);
+                            this.sets[i][3] = this.sets[i][0][this.sets[i][1]];
+                            this.sets[i][0].trigger("change");
+                        }
+                    }
+
+                    //All setters are evaluated on each frame to pick up external state change.
+                    //Therefore side effects should be avoided
+                    for(var i = 0; i < this.gets.length; i++)
+                    {
+                        var getValue = this.gets[i][2].apply(this.gets[i][0], []);
+                        if(this.gets[i][0][this.gets[i][1]] !== getValue) {
+                            this.gets[i][0][this.gets[i][1]] = getValue;
+
+                            //Change in external state must not cause evaluation of setter
+                            for(var j = 0; j < this.sets.length; j++) {
+                                if(this.sets[j][1] === this.gets[i][1]) {
+                                    this.sets[j][3] = getValue;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                });
     },
 
 	toArray: function() {
