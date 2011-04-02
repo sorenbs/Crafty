@@ -1379,7 +1379,11 @@ Crafty.polygon.prototype = {
 
 
 Crafty.c("collision", {
-	
+
+    init: function() {
+        this.requires('2D');
+    },
+
 	collision: function(poly) {
 		var area = this._mbr || this;
 		
