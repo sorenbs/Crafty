@@ -157,6 +157,7 @@ Crafty.fn = Crafty.prototype = {
 			comp = comps[i];
 			if(!this.has(comp)) this.addComponent(comp);
 		}
+        return this;
 	},
 	
 	removeComponent: function(id) {
